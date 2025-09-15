@@ -1,14 +1,18 @@
 <?php
 
-import('lib.pkp.classes.form.Form');
+namespace APP\plugins\generic\coarNotifyReviewOffer;
+
+use PKP\form\Form;
+use APP\template\TemplateManager;
+use APP\plugins\generic\coarNotifyReviewOffer\CoarNotifyReviewOfferPlugin;
 
 class CoarNotifyReviewOfferSettingsForm extends Form {
 
     /** @var int Associated context ID */
-    private $_contextId;
+    private $contextId;
 
     /** @var CoarNotifyReviewOfferPlugin Registration notification plugin */
-    private $_plugin;
+    private $plugin;
 
     /**
      * Constructor
@@ -17,24 +21,24 @@ class CoarNotifyReviewOfferSettingsForm extends Form {
      */
     public function __construct(CoarNotifyReviewOfferPlugin $plugin, $contextId) {
         parent::__construct($plugin->getTemplateResource('settingsForm.tpl'));
-        $this->_contextId = $contextId;
-        $this->_plugin = $plugin;
-        $this->addCheck(new FormValidatorPost($this));
-        $this->addCheck(new FormValidatorCSRF($this));
+        $this->contextId = $contextId;
+        $this->plugin = $plugin;
+        $this->addCheck(new \PKP\form\validation\FormValidatorPost($this));
+        $this->addCheck(new \PKP\form\validation\FormValidatorCSRF($this));
     }
 
     /**
      * @copydoc Form::initData()
      */
     public function initData() {
-        $originName = $this->_plugin->getSetting($this->_contextId, 'originName');
+        $originName = $this->plugin->getSetting($this->contextId, 'originName');
         $this->setData('originName', $originName);
-        $originHomeUrl = $this->_plugin->getSetting($this->_contextId, 'originHomeUrl');
+        $originHomeUrl = $this->plugin->getSetting($this->contextId, 'originHomeUrl');
         $this->setData('originHomeUrl', $originHomeUrl);
-        $originInboxUrl = $this->_plugin->getSetting($this->_contextId, 'originInboxUrl');
+        $originInboxUrl = $this->plugin->getSetting($this->contextId, 'originInboxUrl');
         $this->setData('originInboxUrl', $originInboxUrl);
 
-        $reviewServiceList = $this->_plugin->getSetting($this->_contextId, 'reviewServiceList');
+        $reviewServiceList = $this->plugin->getSetting($this->contextId, 'reviewServiceList');
         $this->setData('homeUrl', is_array($reviewServiceList) ? array_keys($reviewServiceList) : []);
         $this->setData('inboxUrl', is_array($reviewServiceList) ? array_values($reviewServiceList) : []);
 
@@ -45,7 +49,7 @@ class CoarNotifyReviewOfferSettingsForm extends Form {
      * @copydoc Form::readInputData()
      */
     public function readInputData() {
-        $this->readUserVars(array('homeUrl', 'inboxUrl'));
+        $this->readUserVars(['homeUrl', 'inboxUrl']);
         $homeUrls = $this->getData('homeUrl');
         $inboxUrls = $this->getData('inboxUrl');
         foreach($inboxUrls as $i => $inboxUrl) {
@@ -78,12 +82,12 @@ class CoarNotifyReviewOfferSettingsForm extends Form {
      */
     public function fetch($request, $template = null, $display = false) {
         $templateManager = TemplateManager::getManager($request);
-        $templateManager->assign('pluginName', $this->_plugin->getName());
+        $templateManager->assign('pluginName', $this->plugin->getName());
         $templateManager->addJavaScript(
             'CoarNotifyReviewOfferSettingsFormHandler',
-            $request->getBaseUrl() . '/' . $this->_plugin->getPluginPath() . '/js/CoarNotifyReviewOfferSettingsFormHandler.js',
+            $request->getBaseUrl() . '/' . $this->plugin->getPluginPath() . '/js/CoarNotifyReviewOfferSettingsFormHandler.js',
             [
-                'priority' => STYLE_SEQUENCE_CORE,
+                'priority' => TemplateManager::STYLE_SEQUENCE_CORE,
                 'contexts' => 'CoarNotifyReviewOfferSettingsForm'
             ]
         );
@@ -91,11 +95,11 @@ class CoarNotifyReviewOfferSettingsForm extends Form {
     }
 
     public function execute(...$functionArgs) {
-        $this->_plugin->updateSetting($this->_contextId, 'reviewServiceList', array_combine($this->getData('homeUrl'), $this->getData('inboxUrl')), 'object');
+        $this->plugin->updateSetting($this->contextId, 'reviewServiceList', array_combine($this->getData('homeUrl'), $this->getData('inboxUrl')), 'object');
 
-        $this->_plugin->updateSetting($this->_contextId, 'originName', $this->getData('originName'), 'string');
-        $this->_plugin->updateSetting($this->_contextId, 'originHomeUrl', $this->getData('originHomeUrl'), 'string');
-        $this->_plugin->updateSetting($this->_contextId, 'originInboxUrl', $this->getData('originInboxUrl'), 'string');
+        $this->plugin->updateSetting($this->contextId, 'originName', $this->getData('originName'), 'string');
+        $this->plugin->updateSetting($this->contextId, 'originHomeUrl', $this->getData('originHomeUrl'), 'string');
+        $this->plugin->updateSetting($this->contextId, 'originInboxUrl', $this->getData('originInboxUrl'), 'string');
         return parent::execute(...$functionArgs);
     }
 }
