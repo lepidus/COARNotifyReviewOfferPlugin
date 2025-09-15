@@ -25,7 +25,7 @@ use PKP\linkAction\request\AjaxModal;
 use APP\submission\Submission;
 use PKP\core\PKPString;
 use APP\plugins\generic\coarNotifyReviewOffer\CoarNotifyReviewOfferSettingsForm;
-use APP\plugins\generic\coarNotifyReviewOffer\CoarNotifyReviewOfferSchemaMigration;
+use APP\plugins\generic\coarNotifyReviewOffer\classes\migration\CoarNotifyReviewOfferSchemaMigration;
 use APP\plugins\generic\coarNotifyReviewOffer\classes\ReviewOfferPreference;
 use APP\plugins\generic\coarNotifyReviewOffer\classes\ReviewOfferPreferenceDAO;
 
