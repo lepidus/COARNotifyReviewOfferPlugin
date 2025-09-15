@@ -9,6 +9,10 @@
  * Data object representing a Review Offer Preference.
  */
 
+namespace APP\plugins\generic\coarNotifyReviewOffer\classes;
+
+use \PKP\core\DataObject;
+
 class ReviewOfferPreference extends DataObject {
 
     /**
