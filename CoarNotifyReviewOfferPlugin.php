@@ -1,6 +1,6 @@
 <?php
 /**
- * @file plugins/generic/coarNotifyReviewOffer/CoarNotifyReviewOfferPlugin.inc.php
+ * @file plugins/generic/coarNotifyReviewOffer/CoarNotifyReviewOfferPlugin.php
  *
  * Copyright (c) --
 
@@ -10,9 +10,24 @@
  * @ingroup plugins_generic_coarNotifyReviewOffer
  * @brief Plugin class for the Coar Notify Review Offer plugin.
  */
-import('lib.pkp.classes.plugins.GenericPlugin');
-import('lib.pkp.classes.submission.PKPSubmission');
-import('plugins.generic.coarNotifyReviewOffer.CoarNotifyReviewOfferSchemaMigration');
+
+namespace APP\plugins\generic\coarNotifyReviewOffer;
+
+use PKP\plugins\GenericPlugin;
+use APP\core\Application;
+use PKP\plugins\Hook;
+use PKP\db\DAORegistry;
+use APP\notification\NotificationManager;
+use APP\notification\Notification;
+use PKP\core\JSONMessage;
+use PKP\linkAction\LinkAction;
+use PKP\linkAction\request\AjaxModal;
+use APP\submission\Submission;
+use PKP\core\PKPString;
+use APP\plugins\generic\coarNotifyReviewOffer\CoarNotifyReviewOfferSettingsForm;
+use APP\plugins\generic\coarNotifyReviewOffer\CoarNotifyReviewOfferSchemaMigration;
+use APP\plugins\generic\coarNotifyReviewOffer\classes\ReviewOfferPreference;
+use APP\plugins\generic\coarNotifyReviewOffer\classes\ReviewOfferPreferenceDAO;
 
 class CoarNotifyReviewOfferPlugin extends GenericPlugin {
     /** @var array Lazy loaded review service list */
@@ -21,23 +36,20 @@ class CoarNotifyReviewOfferPlugin extends GenericPlugin {
     public function register($category, $path, $mainContextId = null) {
         $success = parent::register($category, $path, $mainContextId);
 
-        if (!Config::getVar('general', 'installed') || defined('RUNNING_UPGRADE')) {
-            return true;
+        if (Application::isUnderMaintenance()) {
+            return $success;
         }
 
         if ($success && $this->getEnabled($mainContextId)) {
-            import('plugins.generic.coarNotifyReviewOffer.classes.ReviewOfferPreference');
-            import('plugins.generic.coarNotifyReviewOffer.classes.ReviewOfferPreferenceDAO');
-
             $reviewOfferPreferenceDao = new ReviewOfferPreferenceDAO();
             DAORegistry::registerDAO('ReviewOfferPreferenceDAO', $reviewOfferPreferenceDao);
 
-            HookRegistry::register('Template::Workflow::Publication', array($this, 'addToWorkflow'));
-            HookRegistry::register('TemplateManager::display',array($this, 'addGridhandlerJs'));
-            HookRegistry::register('Templates::Submission::SubmissionMetadataForm::AdditionalMetadata', array($this, 'submissionWizard'));
+            Hook::add('Template::Workflow::Publication', [$this, 'addToWorkflow']);
+            Hook::add('TemplateManager::display', [$this, 'addGridhandlerJs']);
+            Hook::add('Templates::Submission::SubmissionMetadataForm::AdditionalMetadata', [$this, 'submissionWizard']);
 
-            HookRegistry::register('LoadComponentHandler', array($this, 'setupGridHandler'));
-            HookRegistry::register('Publication::publish', array($this, 'sendNotificationsOnPublish'), HOOK_SEQUENCE_CORE);
+            Hook::add('LoadComponentHandler', [$this, 'setupGridHandler']);
+            Hook::add('Publication::publish', [$this, 'sendNotificationsOnPublish'], Hook::SEQUENCE_CORE);
         }
 
         return $success;
@@ -65,7 +77,6 @@ class CoarNotifyReviewOfferPlugin extends GenericPlugin {
 
     private function notification($type, $message)
     {
-        import('classes.notification.NotificationManager');
         $notificationMgr = new NotificationManager();
         $notificationMgr->createTrivialNotification(
             Application::get()->getRequest()->getUser()->getId(),
@@ -80,17 +91,13 @@ class CoarNotifyReviewOfferPlugin extends GenericPlugin {
     }
 
     public function getDoi($submission) {
-        return $submission->getData('publications')[0]->getData('pub-id::doi');
+        return $submission->getCurrentPublication()->getDoi();
     }
 
     private function getSubmissionType(): string {
         $applicationName = substr(Application::getName(), 0, 3);
 
-        if($applicationName == 'ops') {
-            return 'preprint';
-        }
-
-        return 'article';
+        return ($applicationName == 'ops') ? 'preprint' : 'article';
     }
 
     /**
@@ -125,7 +132,7 @@ class CoarNotifyReviewOfferPlugin extends GenericPlugin {
         $result = json_decode($response);
 
         if (curl_errno($ch)) {
-            throw new Exception('cURL error: ' . curl_error($ch));
+            throw new \Exception('cURL error: ' . curl_error($ch));
         }
 
         curl_close($ch);
@@ -135,8 +142,6 @@ class CoarNotifyReviewOfferPlugin extends GenericPlugin {
 
     public function manage($args, $request) {
         if ($request->getUserVar('verb') == 'settings') {
-            AppLocale::requireComponents(LOCALE_COMPONENT_APP_COMMON, LOCALE_COMPONENT_PKP_MANAGER);
-            $this->import('CoarNotifyReviewOfferSettingsForm');
             $form = new CoarNotifyReviewOfferSettingsForm($this, $request->getContext()->getId());
 
             if ($request->getUserVar('save')) {
@@ -160,7 +165,6 @@ class CoarNotifyReviewOfferPlugin extends GenericPlugin {
      */
     public function getActions($request, $verb) {
         $router = $request->getRouter();
-        import('lib.pkp.classes.linkAction.request.AjaxModal');
         $actions = parent::getActions($request, $verb);
         if ($this->getEnabled()) {
             $actions += [
@@ -190,7 +194,7 @@ class CoarNotifyReviewOfferPlugin extends GenericPlugin {
     }
 
     private function isSubmissionPublished($submission): bool {
-        return $submission->getData('status') === STATUS_PUBLISHED;
+        return $submission->getData('status') === Submission::STATUS_PUBLISHED;
     }
 
     function getReviewOfferPreferences($submissionId) {
@@ -204,15 +208,15 @@ class CoarNotifyReviewOfferPlugin extends GenericPlugin {
     }
 
     public function addToWorkflow($hookName, $params) {
-        $smarty =& $params[1];
-        $output =& $params[2];
-        $submission = $smarty->get_template_vars('submission');
+        $smarty = &$params[1];
+        $output = &$params[2];
+        $submission = $smarty->getTemplateVars('submission');
         $request = Application::get()->getRequest();
         $user = $request->getUser();
 
         $smarty->assign(
             'userIsManager',
-            $user->hasRole(Application::getWorkflowTypeRoles()[WORKFLOW_TYPE_EDITORIAL], $request->getContext()->getId())
+            $user->hasRole(Application::getWorkflowTypeRoles()[Application::WORKFLOW_TYPE_EDITORIAL], $request->getContext()->getId())
         );
 
         $smarty->assign([
@@ -250,7 +254,7 @@ class CoarNotifyReviewOfferPlugin extends GenericPlugin {
         if (!empty($publicationWorkDb) && $publicationWorkDb !== '[]')
             $this->templateParameters['workModel'] = $publicationWorkDb;
 
-        $this->templateParameters['statusCodePublished'] = STATUS_PUBLISHED;
+        $this->templateParameters['statusCodePublished'] = Submission::STATUS_PUBLISHED;
 
         $templateMgr->assign($this->templateParameters);
 
@@ -282,7 +286,7 @@ class CoarNotifyReviewOfferPlugin extends GenericPlugin {
         $templateMgr->addJavaScript(
             'CoarReviewOfferGridHandlerJs',
             $gridHandlerJs,
-            array('contexts' => 'backend')
+            ['contexts' => 'backend']
         );
         return false;
     }
@@ -327,43 +331,43 @@ class CoarNotifyReviewOfferPlugin extends GenericPlugin {
         $targetServices = $this->getReviewServiceTargetsForSubmission($submission->getId());
 
         foreach ($targetServices as $target) {
-            $notification = array(
+            $notification = [
                 "id" => "urn:uuid:" . PKPString::generateUUID(),
-                "@context" => array(
+                "@context" => [
                     "https://www.w3.org/ns/activitystreams",
                     "https://purl.org/coar/notify"
-                ),
-                "type" => array(
+                ],
+                "type" => [
                     "Offer",
                     "coar-notify:ReviewAction"
-                ),
-                "actor" => array(
+                ],
+                "actor" => [
                     "id" => $originHomeUrl,
                     "name" => $originName,
                     "type" => "Service",
-                ),
-                "object" => array(
+                ],
+                "object" => [
                     "id" => $doi,
                     "ietf:cite-as" => "https://doi.org/" . $doi,
-                ),
-                "origin" => array(
+                ],
+                "origin" => [
                     "id" => $originHomeUrl,
                     "inbox" => $originInboxUrl,
                     "type" => "Service",
-                ),
+                ],
                 "target" => $target,
-            );
+            ];
 
             try {
                 $this->sendHttpPostRequest($target['inbox'], $notification);
 
                 $this->notification(
-                    NOTIFICATION_TYPE_SUCCESS,
+                    Notification::NOTIFICATION_TYPE_SUCCESS,
                     'plugins.generic.coarNotifyReviewOffer.notification.reviewOfferSending.success',
                 );
             } catch (Exception $e) {
                 $this->notification(
-                    NOTIFICATION_TYPE_ERROR,
+                    Notification::NOTIFICATION_TYPE_ERROR,
                     'plugins.generic.coarNotifyReviewOffer.notification.reviewOfferSending.fail',
                 );
             }
