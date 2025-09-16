@@ -4,7 +4,9 @@
  * @brief Handle item grid row requests.
  */
 
-import('lib.pkp.classes.controllers.grid.GridRow');
+namespace APP\plugins\generic\coarNotifyReviewOffer\controllers\grid;
+
+use PKP\controllers\grid\GridRow;
 
 class CoarNotifyReviewOfferGridRow extends GridRow {
     /** @var boolean */

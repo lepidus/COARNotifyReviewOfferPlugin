@@ -1,8 +1,18 @@
 <?php
 
-import('lib.pkp.classes.controllers.grid.GridHandler');
-import('plugins.generic.coarNotifyReviewOffer.controllers.grid.CoarNotifyReviewOfferGridRow');
-import('plugins.generic.coarNotifyReviewOffer.controllers.grid.CoarNotifyReviewOfferGridCellProvider');
+namespace APP\plugins\generic\coarNotifyReviewOffer\controllers\grid;
+
+use PKP\controllers\grid\GridHandler;
+use PKP\controllers\grid\GridColumn;
+use APP\core\Application;
+use PKP\security\Role;
+use PKP\db\DAORegistry;
+use PKP\db\DAO;
+use APP\notification\NotificationManager;
+use APP\notification\Notification;
+use PKP\core\JSONMessage;
+use APP\plugins\generic\coarNotifyReviewOffer\controllers\grid\CoarNotifyReviewOfferGridRow;
+use APP\plugins\generic\coarNotifyReviewOffer\controllers\grid\CoarNotifyReviewOfferGridCellProvider;
 
 class CoarReviewOfferGridHandler extends GridHandler {
     static $plugin;
@@ -16,13 +26,13 @@ class CoarReviewOfferGridHandler extends GridHandler {
     function __construct() {
         parent::__construct();
         $this->addRoleAssignment(
-            array(ROLE_ID_MANAGER, ROLE_ID_SUB_EDITOR, ROLE_ID_ASSISTANT, ROLE_ID_AUTHOR),
-            array(
+            [Role::ROLE_ID_MANAGER, Role::ROLE_ID_SUB_EDITOR, Role::ROLE_ID_ASSISTANT, Role::ROLE_ID_AUTHOR],
+            [
                 'fetchGrid',
                 'fetchRow',
                 'assignService',
                 'unassignService',
-            )
+            ]
         );
     }
 
@@ -39,7 +49,7 @@ class CoarReviewOfferGridHandler extends GridHandler {
      * @return Submission
      */
     function getSubmission() {
-        return $this->getAuthorizedContextObject(ASSOC_TYPE_SUBMISSION);
+        return $this->getAuthorizedContextObject(Application::ASSOC_TYPE_SUBMISSION);
     }
 
     /**
@@ -62,7 +72,6 @@ class CoarReviewOfferGridHandler extends GridHandler {
      * @copydoc PKPHandler::authorize()
      */
     function authorize($request, &$args, $roleAssignments) {
-        import('lib.pkp.classes.security.authorization.SubmissionAccessPolicy');
         $this->addPolicy(new SubmissionAccessPolicy($request, $args, $roleAssignments));
         return parent::authorize($request, $args, $roleAssignments);
     }
@@ -77,7 +86,7 @@ class CoarReviewOfferGridHandler extends GridHandler {
     function initialize($request, $args = null) {
         parent::initialize($request, $args);
 
-        $gridData = array();
+        $gridData = [];
         $this->setTitle('plugins.generic.coarNotifyReviewOffer.preferences');
         $this->setEmptyRowText('plugins.generic.coarNotifyReviewOffer.noServices');
 
@@ -98,10 +107,10 @@ class CoarReviewOfferGridHandler extends GridHandler {
         foreach ($reviewServiceList as $serviceUrl => $inboxUrl) {
             $isSelected = in_array($serviceUrl, $currentlySelectedReviewOfferServices);
 
-            $gridData[$this->getSlashlessString($serviceUrl)] = array(
+            $gridData[$this->getSlashlessString($serviceUrl)] = [
                 'serviceUrl' =>  $serviceUrl,
                 'isSelected' => $isSelected,
-            );
+            ];
         }
 
         $this->setGridDataElements($gridData);
@@ -159,8 +168,7 @@ class CoarReviewOfferGridHandler extends GridHandler {
     }
 
     function sendNotification($type, $params) {
-        import('classes.notification.NotificationManager');
-        $notificationMgr = new NotificationManager();
+        $notificationMgr = new NostificationManager();
         $notificationMgr->createTrivialNotification(
             Application::get()->getRequest()->getUser()->getId(),
             $type,
@@ -181,7 +189,7 @@ class CoarReviewOfferGridHandler extends GridHandler {
         $serviceUrl = $args['serviceUrl'][0];
 
         $reviewOfferPreferenceDao = DAORegistry::getDAO('ReviewOfferPreferenceDAO');
-        $reviewOfferPreference = new ReviewOfferPreference();
+        $reviewOfferPreference = $reviewOfferPreferenceDao->newDataObject();
         $reviewOfferPreference->setSubmissionId($submissionId);
         $reviewOfferPreference->setServiceUrl($serviceUrl);
         $reviewOfferPreference->setIsSent(false);
@@ -189,7 +197,7 @@ class CoarReviewOfferGridHandler extends GridHandler {
         $reviewOfferPreferenceDao->insertObject($reviewOfferPreference);
 
         $this->sendNotification(
-            NOTIFICATION_TYPE_SUCCESS,
+            Notification::NOTIFICATION_TYPE_SUCCESS,
             ['contents' => __('plugins.generic.coarNotifyReviewOffer.reviewOfferPreferencesUpdated')],
         );
 
@@ -211,7 +219,7 @@ class CoarReviewOfferGridHandler extends GridHandler {
         $reviewOfferPreferenceDao->deleteByServiceUrlAndSubmissionId($serviceUrl, $submissionId);
 
         $this->sendNotification(
-            NOTIFICATION_TYPE_SUCCESS,
+            Notification::NOTIFICATION_TYPE_SUCCESS,
             ['contents' => __('plugins.generic.coarNotifyReviewOffer.reviewOfferPreferencesUpdated')],
         );
         return DAO::getDataChangedEvent($submissionId);

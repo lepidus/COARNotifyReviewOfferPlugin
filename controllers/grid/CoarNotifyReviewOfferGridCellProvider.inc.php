@@ -1,6 +1,13 @@
 <?php
 
-import('lib.pkp.classes.controllers.grid.GridCellProvider');
+namespace APP\plugins\generic\coarNotifyReviewOffer\controllers\grid;
+
+use PKP\controllers\grid\GridCellProvider;
+use PKP\controllers\grid\GridHandler;
+use APP\core\Application;
+use APP\notification\NotificationManager;
+use PKP\linkAction\request\AjaxAction;
+use PKP\linkAction\LinkAction;
 
 class CoarNotifyReviewOfferGridCellProvider extends GridCellProvider {
 
@@ -38,7 +45,6 @@ class CoarNotifyReviewOfferGridCellProvider extends GridCellProvider {
     }
 
     function notification($type, $message) {
-        import('classes.notification.NotificationManager');
         $notificationMgr = new NotificationManager();
         $notificationMgr->createTrivialNotification(
             Application::get()->getRequest()->getUser()->getId(),
@@ -52,7 +58,7 @@ class CoarNotifyReviewOfferGridCellProvider extends GridCellProvider {
      *
      * @copydoc GridCellProvider::getCellActions()
      */
-    function getCellActions($request, $row, $column, $position = GRID_ACTION_POSITION_DEFAULT) {
+    function getCellActions($request, $row, $column, $position = GridHandler::GRID_ACTION_POSITION_DEFAULT) {
         $reviewService = $row->getData();
         $columnId = $column->getId();
         $router = $request->getRouter();
@@ -65,18 +71,17 @@ class CoarNotifyReviewOfferGridCellProvider extends GridCellProvider {
 
         $actionUrl = $router->url($request, null, null, $operation, null, $actionArgs);
 
-        import('lib.pkp.classes.linkAction.request.AjaxAction');
         $actionRequest = new AjaxAction($actionUrl);
         switch ($columnId) {
             case 'sendReviewOnPublication':
-                return array(
+                return [
                     new LinkAction(
                         $operation,
                         $actionRequest,
                         __("plugins.generic.coarNotifyReviewOffer.reviewOfferPreferencesToggle"),
                         null
                     )
-                );
+                ];
         }
 
         return parent::getCellActions($request, $row, $column, $position);

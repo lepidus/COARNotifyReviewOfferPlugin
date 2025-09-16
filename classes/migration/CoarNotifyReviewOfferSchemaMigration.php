@@ -1,7 +1,7 @@
 <?php
 
 /**
- * @file plugins/generic/coarNotifyReviewOffer/CoarNotifyReviewOfferSchemaMigration.inc.php
+ * @file plugins/generic/coarNotifyReviewOffer/CoarNotifyReviewOfferSchemaMigration.php
  *
  * @class CoarNotifyReviewOfferSchemaMigration
  * @brief Describe database table structures.

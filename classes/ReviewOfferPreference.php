@@ -1,7 +1,7 @@
 <?php
 
 /**
- * @file plugins/generic/coarNotifyReviewOffer/classes/ReviewOfferPreference.inc.php
+ * @file plugins/generic/coarNotifyReviewOffer/classes/ReviewOfferPreference.php
  *
  * @class ReviewOfferPreference
  * @ingroup plugins_generic_coarNotifyReviewOffer
