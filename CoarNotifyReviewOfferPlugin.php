@@ -28,6 +28,7 @@ use APP\plugins\generic\coarNotifyReviewOffer\CoarNotifyReviewOfferSettingsForm;
 use APP\plugins\generic\coarNotifyReviewOffer\classes\migration\CoarNotifyReviewOfferSchemaMigration;
 use APP\plugins\generic\coarNotifyReviewOffer\classes\ReviewOfferPreference;
 use APP\plugins\generic\coarNotifyReviewOffer\classes\ReviewOfferPreferenceDAO;
+use APP\plugins\generic\coarNotifyReviewOffer\controllers\grid\CoarReviewOfferGridHandler;
 
 class CoarNotifyReviewOfferPlugin extends GenericPlugin {
     /** @var array Lazy loaded review service list */
@@ -200,11 +201,11 @@ class CoarNotifyReviewOfferPlugin extends GenericPlugin {
     function getReviewOfferPreferences($submissionId) {
         /* @var $reviewOfferPreferenceDao ReviewOfferPreferenceDAO */
         $reviewOfferPreferenceDao = DAORegistry::getDAO('ReviewOfferPreferenceDAO');
-        $reviewOfferPreferencesResult = $reviewOfferPreferenceDao->getBySubmissionId($submissionId)->toArray();
+        $reviewOfferPreferences = $reviewOfferPreferenceDao->getBySubmissionId($submissionId);
 
         return array_map(function($preference){
             return $preference->getData('serviceUrl');
-        }, $reviewOfferPreferencesResult);
+        }, $reviewOfferPreferences);
     }
 
     public function addToWorkflow($hookName, $params) {
@@ -267,10 +268,12 @@ class CoarNotifyReviewOfferPlugin extends GenericPlugin {
      * @param $args array The parameters to the invoked hook
      */
     function setupGridHandler($hookName, $params) {
-        $component =& $params[0];
+        $component = &$params[0];
+        $componentInstance = &$params[2];
+
         if ($component == 'plugins.generic.coarNotifyReviewOffer.controllers.grid.CoarReviewOfferGridHandler') {
-            import($component);
-            CoarReviewOfferGridHandler::setPlugin($this);
+            $componentInstance = new CoarReviewOfferGridHandler();
+            $componentInstance->setPlugin($this);
             return true;
         }
         return false;

@@ -17,9 +17,14 @@ class ReviewOfferPreferenceDAO extends DAO {
     function getBySubmissionId($submissionId) {
         $result = DB::table(self::TABLE_NAME)
             ->where('submission_id', $submissionId)
-            ->first();
+            ->get();
 
-        return $this->fromRow($result);
+        $reviewOffers = [];
+        foreach ($result as $row) {
+            $reviewOffers[] = $this->fromRow(get_object_vars($row));
+        }
+
+        return $reviewOffers;
     }
 
     /**
