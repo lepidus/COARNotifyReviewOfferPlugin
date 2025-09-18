@@ -1,4 +1,10 @@
-msgid "plugins.generic.coarNotifyReviewOffer.displayName"
+msgid "plugins.generic.coarNotifyReviewOffer.plugin.displayName"
+msgstr "Opciones de evaluación COAR Notify"
+
+msgid "plugins.generic.coarNotifyReviewOffer.plugin.description"
+msgstr "Este complemento notifica a los servicios de evaluación de destino cuando un envío está listo para revisiones preliminares."
+
+msgid "plugins.generic.coarNotifyReviewOffer.title"
 msgstr "Opciones de evaluación"
 
 msgid "plugins.generic.coarNotifyReviewOffer.description"

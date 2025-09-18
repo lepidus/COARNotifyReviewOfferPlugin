@@ -1,4 +1,10 @@
-msgid "plugins.generic.coarNotifyReviewOffer.displayName"
+msgid "plugins.generic.coarNotifyReviewOffer.plugin.displayName"
+msgstr "Coar Notify Review Offers"
+
+msgid "plugins.generic.coarNotifyReviewOffer.plugin.description"
+msgstr "This plugin notifies target review services when a submission has been successful and is ready for pre-reviews"
+
+msgid "plugins.generic.coarNotifyReviewOffer.title"
 msgstr "Review Offers"
 
 msgid "plugins.generic.coarNotifyReviewOffer.description"

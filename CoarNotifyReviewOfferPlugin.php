@@ -62,7 +62,7 @@ class CoarNotifyReviewOfferPlugin extends GenericPlugin {
      * enable and disable plugins.
      */
     public function getDisplayName() {
-        return 'Coar Notify Review Offers';
+        return __('plugins.generic.coarNotifyReviewOffer.plugin.displayName');
     }
 
     /**
@@ -72,7 +72,7 @@ class CoarNotifyReviewOfferPlugin extends GenericPlugin {
      * enable and disable plugins.
      */
     public function getDescription() {
-        return 'This plugin notifies target review services when a submission has been successful and is ready for pre-reviews.';
+        return __('plugins.generic.coarNotifyReviewOffer.plugin.description');
     }
 
     private function notification($type, $message)
@@ -233,7 +233,7 @@ class CoarNotifyReviewOfferPlugin extends GenericPlugin {
 
         $output .= sprintf(
             '<tab id="coarNotifyReviewOffer" label="%s">%s</tab>',
-            __('plugins.generic.coarNotifyReviewOffer.displayName'),
+            __('plugins.generic.coarNotifyReviewOffer.title'),
             $smarty->fetch($this->getTemplateResource('coarNotifyReviewOffer.tpl'))
         );
     }

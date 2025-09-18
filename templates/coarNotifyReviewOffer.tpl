@@ -12,7 +12,7 @@
 
 <div id="coarNotifyReviewOffer">
     <div id="historyHeader">
-        <h2>{translate key="plugins.generic.coarNotifyReviewOffer.displayName"}</h2>
+        <h2>{translate key="plugins.generic.coarNotifyReviewOffer.title"}</h2>
     </div>
     {if $isPublished}
         <p>{translate key="plugins.generic.coarNotifyReviewOffer.reviewOfferDescription"}</p>

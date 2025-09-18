@@ -1,4 +1,10 @@
-msgid "plugins.generic.coarNotifyReviewOffer.displayName"
+msgid "plugins.generic.coarNotifyReviewOffer.plugin.displayName"
+msgstr "Opções de avaliação do COAR Notify"
+
+msgid "plugins.generic.coarNotifyReviewOffer.plugin.description"
+msgstr "Este plugin notifica os serviços de avaliação de destino quando uma submissão está pronta para pré-revisões."
+
+msgid "plugins.generic.coarNotifyReviewOffer.title"
 msgstr "Opções de avaliação"
 
 msgid "plugins.generic.coarNotifyReviewOffer.description"
@@ -20,7 +26,7 @@ msgid "plugins.generic.coarNotifyReviewOffer.reviewOfferPreferences"
 msgstr "Preferências da Opção de Avaliação"
 
 msgid "plugins.generic.coarNotifyReviewOffer.reviewOfferPreferencesUpdated"
-msgstr "Preferências da Opção de Avaliaçã Atualizadas"
+msgstr "Preferências da Opção de Avaliação Atualizadas"
 
 msgid "plugins.generic.coarNotifyReviewOffer.services"
 msgstr "Serviços"
