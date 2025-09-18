@@ -169,7 +169,7 @@ class CoarReviewOfferGridHandler extends GridHandler {
     }
 
     function sendNotification($type, $params) {
-        $notificationMgr = new NostificationManager();
+        $notificationMgr = new NotificationManager();
         $notificationMgr->createTrivialNotification(
             Application::get()->getRequest()->getUser()->getId(),
             $type,
