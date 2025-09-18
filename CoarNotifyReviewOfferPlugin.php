@@ -17,6 +17,7 @@ use PKP\plugins\GenericPlugin;
 use APP\core\Application;
 use PKP\plugins\Hook;
 use PKP\db\DAORegistry;
+use APP\pages\submission\SubmissionHandler;
 use APP\notification\NotificationManager;
 use APP\notification\Notification;
 use PKP\core\JSONMessage;
@@ -47,7 +48,8 @@ class CoarNotifyReviewOfferPlugin extends GenericPlugin {
 
             Hook::add('Template::Workflow::Publication', [$this, 'addToWorkflow']);
             Hook::add('TemplateManager::display', [$this, 'addGridhandlerJs']);
-            Hook::add('Templates::Submission::SubmissionMetadataForm::AdditionalMetadata', [$this, 'submissionWizard']);
+            Hook::add('TemplateManager::display', [$this, 'addToSubmissionWizardSteps']);
+            Hook::add('Template::SubmissionWizard::Section', [$this, 'addToSubmissionWizardTemplate']);
 
             Hook::add('LoadComponentHandler', [$this, 'setupGridHandler']);
             Hook::add('Publication::publish', [$this, 'sendNotificationsOnPublish'], Hook::SEQUENCE_CORE);
@@ -245,21 +247,54 @@ class CoarNotifyReviewOfferPlugin extends GenericPlugin {
      * @param array $args
      * @return void
      */
-    public function submissionWizard(string $hookname, array $args): void {
-        $templateMgr = &$args[1];
-        $request = $this->getRequest();
-        $submissionId = $request->getUserVar('submissionId');
+    public function addToSubmissionWizardSteps(string $hookname, array $args) {
+        $request = Application::get()->getRequest();
 
-        $this->templateParameters['submissionId'] = $submissionId;
+        if ($request->getRequestedPage() !== 'submission' || $request->getRequestedOp() == 'saved') {
+            return;
+        }
 
-        if (!empty($publicationWorkDb) && $publicationWorkDb !== '[]')
-            $this->templateParameters['workModel'] = $publicationWorkDb;
+        $submission = $request
+            ->getRouter()
+            ->getHandler()
+            ->getAuthorizedContextObject(Application::ASSOC_TYPE_SUBMISSION);
 
-        $this->templateParameters['statusCodePublished'] = Submission::STATUS_PUBLISHED;
+        if (!$submission || !$submission->getData('submissionProgress')) {
+            return;
+        }
 
-        $templateMgr->assign($this->templateParameters);
+        $templateMgr = $args[0];
+        $steps = $templateMgr->getState('steps');
+        $steps = array_map(function ($step) {
+            if ($step['id'] === 'editors') {
+                $step['sections'][] = [
+                    'id' => 'coarNotifyReviewOffer',
+                    'name' => __('plugins.generic.coarNotifyReviewOffer.title'),
+                    'description' => __('plugins.generic.coarNotifyReviewOffer.prePubDescription'),
+                    'type' => SubmissionHandler::SECTION_TYPE_TEMPLATE,
+                ];
+            }
+            return $step;
+        }, $steps);
 
-        $templateMgr->display($this->getTemplateResource("submission/form/submissionWizard.tpl"));
+        $templateMgr->setState([
+            'steps' => $steps,
+        ]);
+
+        return Hook::CONTINUE;
+    }
+
+    public function addToSubmissionWizardTemplate($hookName, $args)
+    {
+        $templateMgr = $args[1];
+        $output = &$args[2];
+
+        $output .= sprintf(
+            '<template v-else-if="section.id === \'coarNotifyReviewOffer\'">%s</template>',
+            $templateMgr->fetch($this->getTemplateResource('submission/reviewOffersComponent.tpl'))
+        );
+
+        return false;
     }
 
     /**

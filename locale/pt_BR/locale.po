@@ -97,11 +97,10 @@ msgstr "Pedidos de avaliação podem ser enviados apenas após a designação de
 msgid "plugins.generic.coarNotifyReviewOffer.ensureDoi"
 msgstr "Por favor, certifique-se que um DOI foi designado."
 
-msgid "plugins.generic.coarNotifyReviewOffer.prePubDescriptionPartOne"
-msgstr "Para oferecer automaticamente o seu preprint para avaliação por pares após a postagem em qualquer um dos serviços listados abaixo, basta marcar a caixa de seleção associada."
-
-msgid "plugins.generic.coarNotifyReviewOffer.prePubDescriptionPartTwo"
-msgstr "Uma solicitação será enviada ao serviço de destino por meio do protocolo COAR Notify assim que o seu preprint for postado. Você pode atualizar essa opção a qualquer momento antes da postagem."
+msgid "plugins.generic.coarNotifyReviewOffer.prePubDescription"
+msgstr ""
+"<p>Para oferecer automaticamente o seu preprint para avaliação por pares após a postagem em qualquer um dos serviços listados abaixo, basta marcar a caixa de seleção associada.</p>"
+"<p>Uma solicitação será enviada ao serviço de destino por meio do protocolo COAR Notify assim que o seu preprint for postado. Você pode atualizar essa opção a qualquer momento antes da postagem.</p>"
 
 msgid "plugins.generic.coarNotifyReviewOffer.notification.reviewOfferSending.success"
 msgstr "Opções de avaliação enviadas"

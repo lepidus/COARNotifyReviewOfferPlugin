@@ -44,8 +44,7 @@
         </div>
 
     {else}
-        <p>{translate key="plugins.generic.coarNotifyReviewOffer.prePubDescriptionPartOne"}</p>
-        <p>{translate key="plugins.generic.coarNotifyReviewOffer.prePubDescriptionPartTwo"}</p>
+        <div>{translate key="plugins.generic.coarNotifyReviewOffer.prePubDescription"}</div>
 
         <div id="reviewOfferPreferences">
             {capture assign=reviewOfferPrefsGridUrl}{url router=$smarty.const.ROUTE_COMPONENT component="plugins.generic.coarNotifyReviewOffer.controllers.grid.CoarReviewOfferGridHandler" op="fetchGrid" submissionId=$submission->getId() escape=false}{/capture}
