@@ -15,6 +15,7 @@ namespace APP\plugins\generic\coarNotifyReviewOffer;
 
 use PKP\plugins\GenericPlugin;
 use APP\core\Application;
+use APP\template\TemplateManager;
 use PKP\plugins\Hook;
 use PKP\db\DAORegistry;
 use APP\pages\submission\SubmissionHandler;
@@ -78,8 +79,7 @@ class CoarNotifyReviewOfferPlugin extends GenericPlugin {
         return __('plugins.generic.coarNotifyReviewOffer.plugin.description');
     }
 
-    private function notification($type, $message)
-    {
+    private function notification($type, $message) {
         $notificationMgr = new NotificationManager();
         $notificationMgr->createTrivialNotification(
             Application::get()->getRequest()->getUser()->getId(),
@@ -284,8 +284,7 @@ class CoarNotifyReviewOfferPlugin extends GenericPlugin {
         return Hook::CONTINUE;
     }
 
-    public function addToSubmissionWizardTemplate($hookName, $args)
-    {
+    public function addToSubmissionWizardTemplate($hookName, $args) {
         $templateMgr = $args[1];
         $output = &$args[2];
 
@@ -294,7 +293,7 @@ class CoarNotifyReviewOfferPlugin extends GenericPlugin {
             $templateMgr->fetch($this->getTemplateResource('submission/reviewOffersComponent.tpl'))
         );
 
-        return false;
+        return Hook::CONTINUE;
     }
 
     /**
@@ -322,7 +321,7 @@ class CoarNotifyReviewOfferPlugin extends GenericPlugin {
         $request = $this->getRequest();
         $gridHandlerJs = $this->getJavaScriptURL($request, false) . DIRECTORY_SEPARATOR . 'CoarReviewOfferGridHandler.js';
         $templateMgr->addJavaScript(
-            'CoarReviewOfferGridHandlerJs',
+            'CoarReviewOfferGridHandler',
             $gridHandlerJs,
             ['contexts' => 'backend']
         );

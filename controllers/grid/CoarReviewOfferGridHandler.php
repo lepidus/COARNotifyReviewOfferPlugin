@@ -87,40 +87,10 @@ class CoarReviewOfferGridHandler extends GridHandler {
     public function initialize($request, $args = null) {
         parent::initialize($request, $args);
 
-        $gridData = [];
+        $submissionId = $this->getSubmission()->getId();
+
         $this->setTitle('plugins.generic.coarNotifyReviewOffer.preferences');
         $this->setEmptyRowText('plugins.generic.coarNotifyReviewOffer.noServices');
-
-        if (!$this->plugin) {
-            return;
-        }
-
-        $submission = $this->getSubmission();
-        $submissionId = $submission->getId();
-        $reviewOfferPreferenceDao = DAORegistry::getDAO('ReviewOfferPreferenceDAO');
-
-        $currentlySelectedReviewOfferServices = array_map(function($prefResult) {
-            return $prefResult->getData('serviceUrl');
-        }, $reviewOfferPreferenceDao->getBySubmissionId($submission->getId()));
-
-        $reviewServiceList = $this->plugin->getReviewServiceList();
-
-        foreach ($reviewServiceList as $serviceUrl => $inboxUrl) {
-            $isSelected = in_array($serviceUrl, $currentlySelectedReviewOfferServices);
-
-            $gridData[$this->getSlashlessString($serviceUrl)] = [
-                'serviceUrl' =>  $serviceUrl,
-                'isSelected' => $isSelected,
-            ];
-        }
-
-        $this->setGridDataElements($gridData);
-
-        if ($this->canAdminister($request->getUser())) {
-            $this->setReadOnly(false);
-        } else {
-            $this->setReadOnly(true);
-        }
 
         // Columns
         $cellProvider = new CoarNotifyReviewOfferGridCellProvider();
@@ -141,6 +111,29 @@ class CoarReviewOfferGridHandler extends GridHandler {
             'controllers/grid/common/cell/selectStatusCell.tpl',
             $cellProvider
         ));
+    }
+
+    protected function loadData($request, $filter)
+    {
+        $submission = $this->getSubmission();
+        $reviewOfferPreferenceDao = DAORegistry::getDAO('ReviewOfferPreferenceDAO');
+
+        $currentlySelectedReviewOfferServices = array_map(function($prefResult) {
+            return $prefResult->getData('serviceUrl');
+        }, $reviewOfferPreferenceDao->getBySubmissionId($submission->getId()));
+
+        $reviewServiceList = $this->plugin->getReviewServiceList();
+
+        foreach ($reviewServiceList as $serviceUrl => $inboxUrl) {
+            $isSelected = in_array($serviceUrl, $currentlySelectedReviewOfferServices);
+
+            $gridData[$this->getSlashlessString($serviceUrl)] = [
+                'serviceUrl' =>  $serviceUrl,
+                'isSelected' => $isSelected,
+            ];
+        }
+
+        return $gridData;
     }
 
     //
@@ -202,7 +195,9 @@ class CoarReviewOfferGridHandler extends GridHandler {
             ['contents' => __('plugins.generic.coarNotifyReviewOffer.reviewOfferPreferencesUpdated')],
         );
 
-        return DAO::getDataChangedEvent($submissionId);
+        $json = DAO::getDataChangedEvent($submissionId);
+        $json->setGlobalEvent('plugin:coarNotifyReviewOffer:serviceAssigned', ['submissionId' => $submissionId]);
+        return $json;
     }
 
     /**
@@ -223,7 +218,8 @@ class CoarReviewOfferGridHandler extends GridHandler {
             Notification::NOTIFICATION_TYPE_SUCCESS,
             ['contents' => __('plugins.generic.coarNotifyReviewOffer.reviewOfferPreferencesUpdated')],
         );
-        return DAO::getDataChangedEvent($submissionId);
+        $json = DAO::getDataChangedEvent($submissionId);
+        $json->setGlobalEvent('plugin:coarNotifyReviewOffer:serviceUnassigned', ['submissionId' => $submissionId]);
+        return $json;
     }
-
 }
