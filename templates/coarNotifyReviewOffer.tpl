@@ -20,6 +20,7 @@
 
         <h3>{translate key="plugins.generic.coarNotifyReviewOffer.services"}</h3>
         <div>
+            {capture assign=sendNotificationUrl}{url router=$smarty.const.ROUTE_COMPONENT component="plugins.generic.coarNotifyReviewOffer.controllers.CoarNotifyProxyHandler" op="sendNotification" escape=false}{/capture}
             {foreach from=$reviewServiceList key=targetHomeUrl item=targetInboxUrl name=reviewServiceList}
                 <div class="reviewBlock">
                     <h4 class="reviewServiceHomeUrl">{$targetHomeUrl}</h4>
@@ -27,6 +28,7 @@
                             id="{$smarty.foreach.reviewServiceList.index}-send-button"
                             class="askForReviewButton"
                             onclick="sendNotificationHandler(
+                                    '{$sendNotificationUrl}',
                                     '{$originInboxUrl}',
                                     '{$originHomeUrl}',
                                     '{$targetInboxUrl}',

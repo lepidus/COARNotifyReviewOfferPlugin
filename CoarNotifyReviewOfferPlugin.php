@@ -31,6 +31,7 @@ use APP\plugins\generic\coarNotifyReviewOffer\classes\migration\CoarNotifyReview
 use APP\plugins\generic\coarNotifyReviewOffer\classes\ReviewOfferPreference;
 use APP\plugins\generic\coarNotifyReviewOffer\classes\ReviewOfferPreferenceDAO;
 use APP\plugins\generic\coarNotifyReviewOffer\controllers\grid\CoarReviewOfferGridHandler;
+use \APP\plugins\generic\coarNotifyReviewOffer\controllers\CoarNotifyProxyHandler;
 
 class CoarNotifyReviewOfferPlugin extends GenericPlugin {
     /** @var array Lazy loaded review service list */
@@ -52,7 +53,7 @@ class CoarNotifyReviewOfferPlugin extends GenericPlugin {
             Hook::add('TemplateManager::display', [$this, 'addToSubmissionWizardSteps']);
             Hook::add('Template::SubmissionWizard::Section', [$this, 'addToSubmissionWizardTemplate']);
 
-            Hook::add('LoadComponentHandler', [$this, 'setupGridHandler']);
+            Hook::add('LoadComponentHandler', [$this, 'setupHandlers']);
             Hook::add('Publication::publish', [$this, 'sendNotificationsOnPublish'], Hook::SEQUENCE_CORE);
         }
 
@@ -301,7 +302,7 @@ class CoarNotifyReviewOfferPlugin extends GenericPlugin {
      * @param $hookName string The name of the hook being invoked
      * @param $args array The parameters to the invoked hook
      */
-    function setupGridHandler($hookName, $params) {
+    function setupHandlers($hookName, $params) {
         $component = &$params[0];
         $componentInstance = &$params[2];
 
@@ -310,6 +311,13 @@ class CoarNotifyReviewOfferPlugin extends GenericPlugin {
             $componentInstance->setPlugin($this);
             return true;
         }
+
+        if ($component == 'plugins.generic.coarNotifyReviewOffer.controllers.CoarNotifyProxyHandler') {
+            $componentInstance = new CoarNotifyProxyHandler();
+            $componentInstance->setPlugin($this);
+            return true;
+        }
+
         return false;
     }
 
