@@ -80,7 +80,7 @@ class CoarNotifyReviewOfferPlugin extends GenericPlugin {
         return __('plugins.generic.coarNotifyReviewOffer.plugin.description');
     }
 
-    private function notification($type, $message) {
+    public function notification($type, $message) {
         $notificationMgr = new NotificationManager();
         $notificationMgr->createTrivialNotification(
             Application::get()->getRequest()->getUser()->getId(),

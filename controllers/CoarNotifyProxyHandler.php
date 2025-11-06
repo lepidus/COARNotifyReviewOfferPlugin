@@ -17,6 +17,7 @@ use PKP\core\JSONMessage;
 use PKP\security\authorization\ContextAccessPolicy;
 use PKP\security\Role;
 use APP\core\Application;
+use APP\notification\Notification;
 
 class CoarNotifyProxyHandler extends Handler {
     private $plugin;
@@ -39,9 +40,27 @@ class CoarNotifyProxyHandler extends Handler {
     }
 
     public function sendNotification($args, $request) {
-        if (!$request->checkCSRF()) return new JSONMessage(false);
-        
-        return;
+        $notification = json_decode(file_get_contents('php://input'), true);
+        $targetUrl = $notification['target']['inbox'];
+
+        if (empty($targetUrl)) {
+            return new JSONMessage(false);
+        }
+
+        try {
+            $this->plugin->sendHttpPostRequest($targetUrl, $notification);
+            $this->plugin->notification(
+                Notification::NOTIFICATION_TYPE_SUCCESS,
+                'plugins.generic.coarNotifyReviewOffer.notification.reviewOfferSending.success',
+            );
+            return new JSONMessage(true);
+        } catch (\Exception $e) {
+            $this->plugin->notification(
+                Notification::NOTIFICATION_TYPE_ERROR,
+                'plugins.generic.coarNotifyReviewOffer.notification.reviewOfferSending.fail',
+            );
+            return new JSONMessage(false);
+        }
     }
 }
 

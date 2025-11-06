@@ -49,10 +49,7 @@ function sendNotificationHandler(
         headers: {
             'Content-Type': 'application/json',
         },
-        body: JSON.stringify({
-            targetInboxUrl: targetInboxUrl,
-            payload: payload
-        }),
+        body: JSON.stringify(payload),
     })
         .then(response => response)
         .then(data => {
